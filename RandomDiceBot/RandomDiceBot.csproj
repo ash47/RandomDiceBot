@@ -63,6 +63,9 @@
     <Content Include="reference\coopQuickMatch2.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="reference\coopQuickMatch3.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="reference\coopWatchAd.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

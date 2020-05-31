@@ -17,6 +17,7 @@ namespace RandomDiceBot
         public static Bitmap referenceInGame;
         public static Bitmap referenceMatchEnd;
         public static Bitmap referenceCoopQuickMatch2;
+        public static Bitmap referenceCoopQuickMatch3;
         public static Bitmap referenceBlank;
 
         // Tolerance level for merge
@@ -33,6 +34,10 @@ namespace RandomDiceBot
 
         public static int adWideScreenLeft = -125;
         public static int adWideScreenTop = 483;
+
+        public static int adToTry = 0;
+
+        public static bool loopFailed = false;
 
         public static int GetScreenLeft()
         {
@@ -56,13 +61,26 @@ namespace RandomDiceBot
             referenceInGame = new Bitmap("reference/ingame.png");
             referenceMatchEnd = new Bitmap("reference/endgame.png");
             referenceCoopQuickMatch2 = new Bitmap("reference/coopQuickMatch2.png");
+            referenceCoopQuickMatch3 = new Bitmap("reference/coopQuickMatch3.png");
 
             referenceBlank = new Bitmap("reference/cell_empty.png");
 
             while (true)
             {
+                // Loop didnt fail
+                loopFailed = false;
+
                 // Do some work
                 DoWork();
+
+                if(loopFailed)
+                {
+                    ++adToTry;
+                }
+                else
+                {
+                    adToTry = 0;
+                }
 
                 // Wait for 0.1 seconds
                 Wait(0.1);
@@ -122,7 +140,7 @@ namespace RandomDiceBot
             }
 
             // Are we in the quick match menu?
-            if (GetDifference(fullScreen, referenceCoopQuickMatch, 290, 548) || GetDifference(fullScreen, referenceCoopQuickMatch2, 316, 583))
+            if (GetDifference(fullScreen, referenceCoopQuickMatch, 290, 548) || GetDifference(fullScreen, referenceCoopQuickMatch2, 316, 583) || GetDifference(fullScreen, referenceCoopQuickMatch3, 314, 583))
             {
                 Console.WriteLine("Detected quick play menu, clicking play...");
 
@@ -135,7 +153,7 @@ namespace RandomDiceBot
             }
 
             // Are we in game?
-            if (GetDifference(fullScreen, referenceInGame, 348, 833))
+            if (GetDifference(fullScreen, referenceInGame, 365, 845))
             {
                 Console.WriteLine("We are ingame, let's play");
 
@@ -170,6 +188,8 @@ namespace RandomDiceBot
 
                 int theOffsetMerge = 20;
 
+                int insideCut = 4;
+
                 for (int x = 0; x < 5; ++x)
                 {
                     for (int y = 0; y < 3; ++y)
@@ -177,7 +197,7 @@ namespace RandomDiceBot
                         int startPosX = boardLeft + x * 67;
                         int startPosY = boardTop + y * 65;
 
-                        Bitmap toCheck = CropImage(fullScreen, startPosX, startPosY, 62, 62);
+                        Bitmap toCheck = CropImage(fullScreen, startPosX + insideCut, startPosY + insideCut, 62 - (insideCut * 2), 62 - (insideCut * 2));
 
                         int theValue = GetDifferenceValue(toCheck, referenceBlank);
 
@@ -263,23 +283,83 @@ namespace RandomDiceBot
 
             Console.WriteLine("No idea where we are");
 
-            // Regular screen ad
-            Console.WriteLine("Lets try guess the position of the ad???");
-            MouseControl.ClickPos(adNormalScreenLeft, adNormalScreenTop);
-            Wait(1);
+            // Loop has failed
+            loopFailed = true;
 
-            Console.WriteLine("Clicking back into app...");
-            MouseControl.ClickPos(appTabX, appTabY, true);
-            Wait(1);
+            if (adToTry == 0)
+            {
+                // Regular screen ad
+                Console.WriteLine("Lets try guess the position of the ad???");
+                MouseControl.ClickPos(adNormalScreenLeft, adNormalScreenTop);
+                Wait(1);
 
-            // Wide screen ad
-            Console.WriteLine("Let's guess a wide screen ad?");
-            MouseControl.ClickPos(adWideScreenLeft, adWideScreenTop, true);
-            Wait(1);
+                Console.WriteLine("[1] Clicking back into app...");
+                MouseControl.ClickPos(appTabX, appTabY, true);
+                Wait(1);
 
-            Console.WriteLine("Clicking back into app...");
-            MouseControl.ClickPos(appTabX, appTabY, true);
-            Wait(1);
+                return;
+            }
+
+            if(adToTry == 1)
+            {
+                // Wide screen ad
+                Console.WriteLine("Let's guess a wide screen ad?");
+                MouseControl.ClickPos(adWideScreenLeft, adWideScreenTop, true);
+                Wait(1);
+
+                Console.WriteLine("[2] Clicking back into app...");
+                MouseControl.ClickPos(appTabX, appTabY, true);
+                Wait(1);
+
+                return;
+            }
+
+            if(adToTry == 2)
+            {
+                // Other wide screen ad
+                Console.WriteLine("Let's guess a wide screen ad #2?");
+                MouseControl.ClickPos(-70, 429, true);
+                Wait(1);
+
+                Console.WriteLine("[3] Clicking back into app...");
+                MouseControl.ClickPos(appTabX, appTabY, true);
+                Wait(1);
+
+                return;
+            }
+
+            if(adToTry == 3)
+            {
+                // Other ad top corner
+                Console.WriteLine("Let's guess a regular ad #2?");
+                MouseControl.ClickPos(-1213, 441, true);
+                Wait(1);
+
+                Console.WriteLine("[3] Clicking back into app...");
+                MouseControl.ClickPos(appTabX, appTabY, true);
+                Wait(1);
+
+                return;
+            }
+
+            if (adToTry == 4)
+            {
+                // Other ad top corner
+                Console.WriteLine("Let's guess a regular ad #3?");
+                MouseControl.ClickPos(-684, 416, true);
+                Wait(1);
+
+                Console.WriteLine("[3] Clicking back into app...");
+                MouseControl.ClickPos(appTabX, appTabY, true);
+                Wait(1);
+
+                return;
+            }
+
+            // Restart to original ad
+            adToTry = 0;
+
+
 
             //CropImage(fullScreen, 290, 548, 205, 111).Save("reference/coopQuickMatch.png", System.Drawing.Imaging.ImageFormat.Png);
 
@@ -308,8 +388,8 @@ namespace RandomDiceBot
 
         public static bool GetDifference(Bitmap fullScreen, Bitmap comparision, int fullscreenX = 0, int fullscreenY = 0, int threashold = 0)
         {
-            int width = comparision.Width;
-            int height = comparision.Height;
+            int width = Math.Min(comparision.Width, fullScreen.Width - fullscreenX);
+            int height = Math.Min(comparision.Height, fullScreen.Height - fullscreenY);
 
             for (int xx = 0; xx < width; ++xx)
             {
@@ -331,8 +411,8 @@ namespace RandomDiceBot
 
         public static int GetDifferenceValue(Bitmap fullScreen, Bitmap comparision, int fullscreenX = 0, int fullscreenY = 0)
         {
-            int width = comparision.Width;
-            int height = comparision.Height;
+            int width = Math.Min(comparision.Width, fullScreen.Width - fullscreenX);
+            int height = Math.Min(comparision.Height, fullScreen.Height - fullscreenY);
 
             int currentCount = 0;
 
